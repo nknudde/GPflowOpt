@@ -19,6 +19,7 @@ from .acquisition import Acquisition, AcquisitionAggregation, AcquisitionProduct
 from .ei import ExpectedImprovement
 from .poi import ProbabilityOfImprovement
 from .lcb import LowerConfidenceBound
+from .pes import PredictiveEntropySearch
 
 # Multi-objective
 
