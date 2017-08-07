@@ -62,6 +62,8 @@ class PredictiveEntropySearch(Acquisition):
         step = 0
         max_steps = 100
         while diff > 1E4 and step < max_steps:
+            epsilon *= epsilon
+            step += 1
             An, bn = self.ep_iteration(fmean, fvar, A, b)
             A = epsilon * An + (1 - epsilon) * A
             b = epsilon * bn + (1 - epsilon) * b
