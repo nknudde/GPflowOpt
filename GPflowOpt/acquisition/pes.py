@@ -57,6 +57,15 @@ class PredictiveEntropySearch(Acquisition):
         A = np.zeros((N, 2, 2))
         b = np.zeros((N, 2))
 
+        diff = 1.
+        epsilon = 0.99
+        step = 0
+        max_steps = 100
+        while diff > 1E4 and step < max_steps:
+            An, bn = self.ep_iteration(fmean, fvar, A, b)
+            A = epsilon * An + (1 - epsilon) * A
+            b = epsilon * bn + (1 - epsilon) * b
+
     @AutoFlow((float_type, [None, None]), (float_type, [None, None]), (float_type, [None, 2, 2]),
               (float_type, [None, 2]))
     def ep_iteration(self, fmean, fvar, A, b):
@@ -102,14 +111,14 @@ class PredictiveEntropySearch(Acquisition):
         dlogZdm = tf.gradients(logZ, mn)
         dlogZdV = tf.gradients(logZ, Vn)
 
-        Vfn0_new = Vn - tf.matmul(Vn, tf.matmul(tf.matmul(dlogZdm, tf.matrix_transpose(dlogZdm))-2*dlogZdV, Vn))
+        Vfn0_new = Vn - tf.matmul(Vn, tf.matmul(tf.matmul(dlogZdm, tf.matrix_transpose(dlogZdm)) - 2 * dlogZdV, Vn))
         mfn0_new = mn + tf.matmul(Vn, dlogZdm)
 
         Vfn0_new_chol = tf.cholesky(Vfn0_new)
         VnL = tf.cholesky(Vn)
 
         tmp5 = tf.matrix_triangular_solve(Vfn0_new_chol, VnL)
-        tmp6 = tf.cholesky(tf.matmul(tf.matrix_transpose(tmp5), tmp5) + tf.expand_dims(tf.eye(2),0))
+        tmp6 = tf.cholesky(tf.matmul(tf.matrix_transpose(tmp5), tmp5) + tf.expand_dims(tf.eye(2), 0))
         tmp7 = tf.matrix_triangular_solve(tf.matrix_transpose(VnL), tmp6, lower=False)
         An = tf.matmul(tmp7, tf.matrix_transpose(tmp7))
         bn = tf.squeeze(tf.cholesky_solve(Vfn0_new_chol, mfn0_new) - tf.cholesky_solve(VnL, mfn0_new))
