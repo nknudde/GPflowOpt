@@ -106,7 +106,7 @@ class PredictiveEntropySearch(Acquisition):
             tf.reduce_sum(2 * tf.matrix_diag_part(Vn), axis=1) - tf.reduce_sum(Vn, [1, 2]))
 
         norm = tf.contrib.distributions.Normal()
-        logZ = norm.log_cdf(alpha)
+        logZ = tf.reduce_sum(norm.log_cdf(alpha))
 
         dlogZdm = tf.gradients(logZ, mn)
         dlogZdV = tf.gradients(logZ, Vn)
