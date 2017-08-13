@@ -87,7 +87,7 @@ class Domain(Parentable):
         return self._parameters[items]
 
     def __rshift__(self, other):
-        assert(self.size == other.size)
+        assert (self.size == other.size)
         A = (other.upper - other.lower) / (self.upper - self.lower)
         b = -self.upper * A + other.upper
         return LinearTransform(A, b)
@@ -198,10 +198,46 @@ class ContinuousParameter(Parameter):
         return "<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>".format(self.label, 'Continuous', str(self._range))
 
 
+class DiscreteParameter(Parameter):
+    def __init__(self, label, lb, ub, xinit=None):
+        self._range = np.array([lb, ub], dtype=float)
+        if xinit is not None:
+            assert isinstance(xinit, int), "Initial value has to be an integer."
+        super(DiscreteParameter, self).__init__(label, xinit or int((ub + lb) / 2.0))
+
+    @Parameter.lower.getter
+    def lower(self):
+        return np.array([self._range[0]])
+
+    @Parameter.upper.getter
+    def upper(self):
+        return np.array([self._range[1]])
+
+    @lower.setter
+    def lower(self, value):
+        assert isinstance(value, int), "Lower bound has to be an integer"
+        self._range[0] = value
+
+    @upper.setter
+    def upper(self, value):
+        assert isinstance(value, int), "Upper bound has to be an integer"
+        self._range[1] = value
+
+    def __eq__(self, other):
+        return isinstance(other, DiscreteParameter) and self.lower == other.lower and self.upper == other.upper
+
+    def _html_table_rows(self):
+        """
+        Html row representation of a ContinuousParameter.
+        """
+        return "<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>".format(self.label, 'Discrete', str(self._range))
+
+
 class UnitCube(Domain):
     """
     The unit domain [0, 1]^d
     """
+
     def __init__(self, n_inputs):
         params = [ContinuousParameter('u{0}'.format(i), 0, 1) for i in np.arange(n_inputs)]
         super(UnitCube, self).__init__(params)
